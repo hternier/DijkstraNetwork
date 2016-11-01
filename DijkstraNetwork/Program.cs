@@ -8,7 +8,22 @@ namespace DijkstraNetwork
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Start");
 
+            List<Node> nodes = Initialisation();
+            List<Node> bestPath = DijkstraGo(nodes, 1, 3);
+
+            Console.WriteLine("Compute ended. Result:");
+
+            int index = 0;
+            foreach (Node node in bestPath)
+            {
+                Console.WriteLine("Node {0}: {1} ({2})", index++, node.Id, node.PathWeight);
+            }
+
+            Console.WriteLine("Total path weight: {0}", bestPath.Last().PathWeight);
+
+            Console.ReadKey();
         }
 
         private static List<Node> Initialisation()
@@ -17,89 +32,75 @@ namespace DijkstraNetwork
             var node2 = new Node(2);
             var node3 = new Node(3);
 
-            node1.Links.Add(node2, 1);
-            node1.Links.Add(node3, 3);
+            node1.Childrens.Add(node2, 1);
+            node1.Childrens.Add(node3, 3);
 
-            node2.Links.Add(node3, 1);
+            node2.Childrens.Add(node3, 1);
 
             return new List<Node> { node1, node2, node3 };
         }
 
-        private static void FindShortestPath(List<Node> nodes, int startNodeId, int endNodeId)
+        private static List<Node> DijkstraGo(List<Node> nodes, int startNodeId, int endNodeId)
         {
-            var nodesAncestors = new List<Tuple<Node, int, Node>>();
-            var nodesTotalWeight = new Dictionary<Node, int>();
+            var nodesAncestors = new Dictionary<Node, Node>();
 
             Node startNode = nodes.Where(n => n.Id == startNodeId).Single();
             Node endNode = nodes.Where(n => n.Id == endNodeId).Single();
+            Node actualNode = null;
 
-            while (nodesTotalWeight.OrderBy(w => w.Value).First().Key != endNode)
+            startNode.PathWeight = 0;
+
+            while (actualNode != endNode)
             {
-                KeyValuePair<Node, int> linkedNode = startNode.Links.OrderBy(l => l.Value).First();
-
-                if (!nodesTotalWeight.ContainsKey(linkedNode.Key))
-                {
-                    nodesAncestors.Add(new Tuple<Node, int, Node>(startNode, linkedNode.Value, linkedNode.Key));
-
-                    int totalWeight = GetTotalWeight(linkedNode.Key, nodesAncestors);
-                    nodesTotalWeight.Add(linkedNode.Key, totalWeight);
-                }
+                actualNode = nodes.Where(n => !n.IsVisited && n.PathWeight != null).OrderBy(n => n.PathWeight).First();
+                ComputeChildeNodes(actualNode, nodesAncestors);
             }
 
-
-            startNode.Links.Min(l => l.Value);
+            return GetPath(startNode, endNode, nodesAncestors);
         }
 
-        private static Node FindLowestNoneReadNode(Node startNode, Node actualNode, List<Tuple<Node, int, Node>> nodesAncestors, Dictionary<Node, int> nodesTotalWeight)
+        internal static void ComputeChildeNodes(Node actualNode, Dictionary<Node, Node> nodesAncestors)
         {
-            int actualWeight = GetTotalWeight(startNode, actualNode, nodesAncestors);
+            actualNode.IsVisited = true;
 
-            foreach (var nextNode in actualNode.Links.OrderBy(l => l.Value))
+            foreach (var T in actualNode.Childrens)
             {
-                if (!nodesTotalWeight.Contains(nextNode) 
-                    && GetTotalWeight(startNode, nextNode.Key, nodesAncestors) <  actualWeight)
+                Node childeNode = T.Key;
+                int nodeWeight = T.Value;
+
+                // Here the magic begin
+                if (!childeNode.IsVisited && (childeNode.PathWeight == null || childeNode.PathWeight > actualNode.PathWeight + nodeWeight))
                 {
-                    return nextNode.Key;
+                    childeNode.PathWeight = actualNode.PathWeight + nodeWeight;
+                    nodesAncestors[childeNode] = actualNode;
                 }
             }
-
-            return actualNode;
         }
 
-        private static int GetTotalWeight(Node startNode, Node nodeToReach, List<Tuple<Node, int, Node>> nodesAncestors)
+        internal static List<Node> GetPath(Node startNode, Node endNode, Dictionary<Node, Node> nodesAncestors)
         {
-            int totalWeight = 0;
+            var path = new List<Node>();
 
-            return FindWeight(startNode, nodeToReach, nodesAncestors, totalWeight);
+            path.Add(endNode);
+            FindNext(startNode, endNode, path, nodesAncestors);
+            
+            return path.Reverse<Node>().ToList();
         }
 
-        /// <summary>
-        /// Compute recursively the weight between two nodes.
-        /// </summary>
-        /// <param name="parentNode">The parent node</param>
-        /// <param name="nodesAncestors">List of tuples as Node, Weight, Parent node</param>
-        /// <returns></returns>
-        private static int FindWeight(Node startNode, Node parentNode, List<Tuple<Node, int, Node>> nodesAncestors, int actualWeight)
+        private static void FindNext(Node endNode, Node currentNode, List<Node> path, Dictionary<Node, Node> nodesAncestors)
         {
-            var link = nodesAncestors.FirstOrDefault(n => n.Item3 == parentNode);
-            if (link != null)
+            currentNode = nodesAncestors[currentNode];
+            path.Add(currentNode);
+
+            if (currentNode != endNode)
             {
-                actualWeight += link.Item2;
-
-                parentNode = link.Item1;
-
-                if (parentNode != startNode)
-                {
-                    FindWeight(startNode, parentNode, nodesAncestors, actualWeight);
-                }
-                else
-                {
-                    return actualWeight;
-                }
+                FindNext(endNode, currentNode, path, nodesAncestors);
+            }
+            else
+            {
+                return;
             }
 
-            // The finding node doesn't exist
-            return -1;
         }
     }
 }
