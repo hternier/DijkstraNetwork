@@ -4,7 +4,6 @@ namespace DijkstraNetwork
 {
     public class Node
     {
-        //private HashSet<Node> links;
         public Dictionary<Node, int> Childrens = new Dictionary<Node, int>();
 
         public string Id { get; }

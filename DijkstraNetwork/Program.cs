@@ -10,8 +10,8 @@ namespace DijkstraNetwork
         {
             Console.WriteLine("Start");
 
-            List<Node> nodes = Initialisation();
-            List<Node> bestPath = DijkstraGo(nodes, "A", "J");
+            List<Node> nodes = InitSecondExemple();
+            List<Node> bestPath = DijkstraGo(nodes, nodes.First().Id, nodes.Last().Id);
 
             Console.WriteLine("Compute ended. Result:");
 
@@ -26,7 +26,26 @@ namespace DijkstraNetwork
             Console.ReadKey();
         }
 
-        private static List<Node> Initialisation()
+        private static List<Node> InitFirstExemple()
+        {
+            var A = new Node("A");
+            var B = new Node("B");
+            var C = new Node("C");
+            var D = new Node("D");
+            var E = new Node("E");
+
+            A.Childrens.Add(B, 5);
+            A.Childrens.Add(C, 8);
+
+            B.Childrens.Add(D, 10);
+            D.Childrens.Add(E, 1);
+
+            C.Childrens.Add(E, 2);
+
+            return new List<Node> { A, B, C, D, E };
+        }
+
+        private static List<Node> InitSecondExemple()
         {
             var A = new Node("A");
             var B = new Node("B");
@@ -60,7 +79,10 @@ namespace DijkstraNetwork
             return new List<Node> { A, B, C, D, E, F, G, H, I, J };
         }
 
-        private static List<Node> DijkstraGo(List<Node> nodes, string startNodeId, string endNodeId)
+        /// <summary>
+        /// Lauch the main Dijkstra method
+        /// </summary>
+        internal static List<Node> DijkstraGo(List<Node> nodes, string startNodeId, string endNodeId)
         {
             var nodesAncestors = new Dictionary<Node, Node>();
 
@@ -72,31 +94,38 @@ namespace DijkstraNetwork
 
             while (actualNode != endNode)
             {
+                // Select the lightweight not visited node
                 actualNode = nodes.Where(n => !n.IsVisited && n.PathWeight != null).OrderBy(n => n.PathWeight).First();
-                ComputeChildeNodes(actualNode, nodesAncestors);
+                ComputeChildNodes(actualNode, nodesAncestors);
             }
 
             return GetPath(startNode, endNode, nodesAncestors);
         }
 
-        internal static void ComputeChildeNodes(Node actualNode, Dictionary<Node, Node> nodesAncestors)
+        /// <summary>
+        /// Compute the weigh path for each actual child nodes.
+        /// </summary>
+        internal static void ComputeChildNodes(Node actualNode, Dictionary<Node, Node> nodesAncestors)
         {
             actualNode.IsVisited = true;
 
             foreach (var T in actualNode.Childrens)
             {
-                Node childeNode = T.Key;
+                Node childNode = T.Key;
                 int nodeWeight = T.Value;
 
                 // Here the magic begin
-                if (!childeNode.IsVisited && (childeNode.PathWeight == null || childeNode.PathWeight > actualNode.PathWeight + nodeWeight))
+                if (!childNode.IsVisited && (childNode.PathWeight == null || childNode.PathWeight > actualNode.PathWeight + nodeWeight))
                 {
-                    childeNode.PathWeight = actualNode.PathWeight + nodeWeight;
-                    nodesAncestors[childeNode] = actualNode;
+                    childNode.PathWeight = actualNode.PathWeight + nodeWeight;
+                    nodesAncestors[childNode] = actualNode;
                 }
             }
         }
 
+        /// <summary>
+        /// Get the result path
+        /// </summary>
         internal static List<Node> GetPath(Node startNode, Node endNode, Dictionary<Node, Node> nodesAncestors)
         {
             var path = new List<Node>();
@@ -120,7 +149,6 @@ namespace DijkstraNetwork
             {
                 return;
             }
-
         }
     }
 }
