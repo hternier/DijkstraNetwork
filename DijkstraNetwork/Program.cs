@@ -11,7 +11,7 @@ namespace DijkstraNetwork
             Console.WriteLine("Start");
 
             List<Node> nodes = Initialisation();
-            List<Node> bestPath = DijkstraGo(nodes, 1, 3);
+            List<Node> bestPath = DijkstraGo(nodes, "A", "J");
 
             Console.WriteLine("Compute ended. Result:");
 
@@ -28,19 +28,39 @@ namespace DijkstraNetwork
 
         private static List<Node> Initialisation()
         {
-            var node1 = new Node(1);
-            var node2 = new Node(2);
-            var node3 = new Node(3);
+            var A = new Node("A");
+            var B = new Node("B");
+            var C = new Node("C");
+            var D = new Node("D");
+            var E = new Node("E");
+            var F = new Node("F");
+            var G = new Node("G");
+            var H = new Node("H");
+            var I = new Node("I");
+            var J = new Node("J");
 
-            node1.Childrens.Add(node2, 1);
-            node1.Childrens.Add(node3, 3);
+            A.Childrens.Add(B, 85);
+            A.Childrens.Add(C, 217);
+            A.Childrens.Add(E, 175);
 
-            node2.Childrens.Add(node3, 1);
+            B.Childrens.Add(F, 80);
 
-            return new List<Node> { node1, node2, node3 };
+            F.Childrens.Add(I, 250);
+
+            I.Childrens.Add(J, 84);
+
+            C.Childrens.Add(G, 186);
+            C.Childrens.Add(H, 103);
+
+            H.Childrens.Add(D, 183);
+            H.Childrens.Add(J, 167);
+
+            E.Childrens.Add(J, 502);
+
+            return new List<Node> { A, B, C, D, E, F, G, H, I, J };
         }
 
-        private static List<Node> DijkstraGo(List<Node> nodes, int startNodeId, int endNodeId)
+        private static List<Node> DijkstraGo(List<Node> nodes, string startNodeId, string endNodeId)
         {
             var nodesAncestors = new Dictionary<Node, Node>();
 

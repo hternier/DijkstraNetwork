@@ -7,13 +7,13 @@ namespace DijkstraNetwork
         //private HashSet<Node> links;
         public Dictionary<Node, int> Childrens = new Dictionary<Node, int>();
 
-        public int Id { get; }
+        public string Id { get; }
 
         public int? PathWeight { get; set; } = null;
 
         public bool IsVisited { get; set; } = false;
 
-        public Node(int id)
+        public Node(string id)
         {
             Id = id;
         }
